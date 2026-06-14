@@ -190,7 +190,11 @@ const DashboardPage = () => {
 
   // Socket.IO Setup for real-time synchronization
   useEffect(() => {
-    const backendUrl = import.meta.env.VITE_API_URL ? 'http://localhost:5000' : window.location.origin;
+    let backendUrl = 'http://localhost:5000';
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    if (apiUrl.startsWith('http')) {
+      backendUrl = apiUrl.replace(/\/api\/?$/, '');
+    }
     const socket = io(backendUrl, {
       withCredentials: true
     });
