@@ -1,0 +1,85 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id         String      @id @default(uuid())
+  name       String
+  email      String      @unique
+  password   String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  shortUrls  ShortUrl[]
+  workspaces Workspace[]
+  activities Activity[]
+}
+
+model Workspace {
+  id        String     @id @default(uuid())
+  name      String
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  shortUrls ShortUrl[]
+
+  @@unique([userId, name])
+}
+
+model ShortUrl {
+  id          String      @id @default(uuid())
+  originalUrl String
+  shortCode   String      @unique
+  alias       String?     @unique
+  expiryDate  DateTime?
+  clicks      Int         @default(0)
+  isFavorite        Boolean     @default(false)
+  analyticsPassword String?
+  createdAt         DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String?
+  workspace   Workspace?  @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  analytics   Analytics[]
+  notes       Note[]
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  content    String
+  shortUrlId String
+  shortUrl   ShortUrl @relation(fields: [shortUrlId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  details   String
+  timestamp DateTime @default(now())
+}
+
+model Analytics {
+  id         String   @id @default(uuid())
+  shortUrlId String
+  shortUrl   ShortUrl @relation(fields: [shortUrlId], references: [id], onDelete: Cascade)
+  timestamp  DateTime @default(now())
+  browser    String
+  device     String
+  os         String   @default("Unknown")
+  country    String   @default("Unknown")
+  city       String   @default("Unknown")
+  referrer   String   @default("Direct")
+  timezone   String   @default("UTC")
+  language   String   @default("en")
+  ip         String
+}

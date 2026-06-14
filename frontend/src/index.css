@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-rich-black: #0A0A0A;
+  --color-emerald-green: #10B981;
+  --color-luxury-gold: #FBBF24;
+  --color-dark-gray: #121212;
+  --color-card-bg: #161616;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-rich-black);
+    color: #F3F4F6; /* slate-100 */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Custom Scrollbar for Luxury Aesthetics */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0A0A0A;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2A2A2A;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #10B981;
+  }
+}
+
+/* Custom spotlight glass card animations and styling */
+.glass-card {
+  background: rgba(22, 22, 22, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gradient-border-emerald-gold {
+  position: relative;
+  border-radius: 0.75rem;
+  background: rgba(22, 22, 22, 0.9);
+  padding: 1px;
+}
+
+.gradient-border-emerald-gold::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0.75rem;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #10B981, #FBBF24);
+  -webkit-mask: 
+     linear-gradient(#fff 0 0) content-box, 
+     linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}

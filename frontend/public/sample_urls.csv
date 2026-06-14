@@ -1,0 +1,6 @@
+id,url,alias,expiryDate
+1,https://google.com,google-home,2026-12-31
+2,https://github.com,github-home,
+3,https://youtube.com,youtube-home,
+4,https://wikipedia.org,wiki-main,2027-01-01
+5,https://stackoverflow.com,stack-overflow,
