@@ -6,9 +6,54 @@ NexLink is a next-generation URL shortening and link intelligence platform. Buil
 
 ## Technical Stack
 
-* **Frontend**: React.js, Vite, Tailwind CSS v4, React Router DOM, Axios, Framer Motion, Lucide React
-* **Backend**: Node.js, Express.js, JWT, bcryptjs, express-useragent, request-ip
+* **Frontend**: React.js, Vite, Tailwind CSS v4, React Router DOM, Axios, Framer Motion, Lucide React, Recharts, Socket.io-client
+* **Backend**: Node.js, Express.js, JWT, bcryptjs, express-useragent, request-ip, Socket.io
 * **Database & ORM**: PostgreSQL, Prisma ORM
+
+---
+
+## Architecture Diagram
+
+Below is the conceptual architecture showing how client requests, redirect telemetry, and real-time updates flow through NexLink:
+
+```mermaid
+graph TD
+    Client[React Frontend - Port 5173] <-->|HTTP API Requests / /api Proxy| Server[Node.js / Express Server - Port 5000]
+    Client <-->|Socket.IO Connection| Server
+    Server -->|Prisma Client ORM| DB[(PostgreSQL Database)]
+    
+    Visitor[Visitor / Shortened Link Clicker] -->|GET /:shortCode| Server
+    Server -->|1. Increment Click Count| DB
+    Server -->|2. Create Analytics Record| DB
+    Server -->|3. Broadcast 'url-click' Event| Client
+    Server -->|4. HTTP 302 Redirect| ExternalSite[Original Long URL]
+```
+
+---
+
+## AI Planning Document
+
+The NexLink project was implemented systematically using agentic AI planning. The development blueprint was structured into four core phases:
+
+### Phase 1: Database Schema Modeling
+* Formulated the database architecture in [schema.prisma](file:///c:/Users/NITHEESH%20R/OneDrive/Desktop/projects/backend/prisma/schema.prisma).
+* Modeled relations between **Users**, **Workspaces**, **Short URLs**, **Notes**, and **Analytics** (tracking browser, device, OS, IP, referrer, and location).
+
+### Phase 2: Core Backend Services
+* Built user authorization (signup, login, JWT issuance).
+* Created link shortening routes (`/urls/shorten`) supporting custom alphanumeric aliases, expiration validation, and optional password protection.
+* Coded a custom bulk uploader endpoint (`/urls/bulk`) that executes in a single transaction.
+* Implemented the root redirect router (`GET /:shortCode`) with user-agent, IP geolocation parser, and integrated Socket.IO event emitter.
+
+### Phase 3: Premium Frontend Experience
+* Established the CSS styling system using Tailwind CSS.
+* Developed the interactive dashboard containing metrics (Total Links, Total Clicks, Active Links, Expired Links, and Avg Daily Hits) with smooth count-up animations.
+* Built the bulk CSV upload workspace supporting previewing, upload tracking, and inline errors.
+* Added QR Code generation, workspace filtering, search options, CSV/XLS export capabilities, and a live visitor counter.
+
+### Phase 4: Dynamic CSV Parsing & Resilience
+* Upgraded the CSV parser on the client-side to dynamically detect column structures (ignoring row indices/serial numbers).
+* Added auto-prepending `https://` protocols for domain inputs to guarantee validation success on the backend.
 
 ---
 
@@ -38,7 +83,7 @@ Follow these steps to configure, migrate, and run NexLink locally.
    Open the `backend/.env` file and update your PostgreSQL credentials if they differ from the default:
    ```env
    PORT=5000
-   DATABASE_URL="postgresql://username:password@localhost:5432/nexlink_db?schema=public"
+   DATABASE_URL="postgresql://postgres:nit25bls+=@localhost:5432/nexlink_db?schema=public"
    JWT_SECRET="nexlink_luxury_secret_jwt_key_2026_rfv_tgb"
    FRONTEND_URL="http://localhost:5173"
    BASE_URL="http://localhost:5000"
@@ -47,8 +92,7 @@ Follow these steps to configure, migrate, and run NexLink locally.
 4. **Initialize Database Schema & Client**:
    Run the following Prisma commands to push the schema migrations to PostgreSQL and generate the client code:
    ```bash
-   # Run migrations
-   npx prisma migrate dev --name init
+   npx prisma db push
    ```
 
 5. **Start the Express Development Server**:
@@ -86,10 +130,13 @@ Follow these steps to configure, migrate, and run NexLink locally.
 
 ---
 
-## Key Features
+## Assumptions Made
 
-1. **User Authentication**: Secure Signup/Login with password hashing (bcrypt) and persistent sessions via JWT stored in `localStorage`.
-2. **Interactive Shortener Card**: Center-positioned luxury card supporting long URLs, custom alphanumeric alias validation (to prevent duplicates), and expiry limits.
-3. **Automatic Redirects**: Root-level wildcard redirections (`GET /:shortCode`) parsing visitor browser client, device classification (desktop/mobile/tablet), and client IP.
-4. **Rich Link Dashboard**: Provides Count-Up counters showing total links and total clicks, and a responsive table to copy shortcodes, delete links, or view telemetry logs.
-5. **Visitor Analytics**: Clean progress bars representing browser and device splits, last clicked timestamps, and a chronological history log.
+1. **Database Location**: Assumed that PostgreSQL is running locally on port `5432` with a database named `nexlink_db`.
+2. **Local Environment Proxy**: Assumed that developers are running the React client using Vite's development proxy configured in `vite.config.js` to avoid CORS issues between ports `5173` and `5000`.
+3. **Local Developer Geolocation**: Since local IPs (`127.0.0.1` or `::1`) don't resolve through standard GeoIP lookup services, the app simulates local developer activity by setting visitor locations to **IN / Bengaluru / Asia/Kolkata**.
+4. **CSV Input Variances**: Assumed that bulk-uploaded CSV files may include index numbers or columns in different orders. The frontend has been hardened to parse column layouts dynamically based on cell headers and contents.
+
+---
+
+This project is a part of a hackathon run by https://katomaran.com
