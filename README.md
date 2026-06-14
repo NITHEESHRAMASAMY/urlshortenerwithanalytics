@@ -14,19 +14,53 @@ NexLink is a next-generation URL shortening and link intelligence platform. Buil
 
 ## Architecture Diagram
 
-Below is the conceptual architecture showing how client requests, redirect telemetry, and real-time updates flow through NexLink:
+Below is the component architecture of NexLink, showcasing the separation of concerns across the Presentation Layer (Frontend), Application Server (Backend API & Sockets), and Data Layer:
 
 ```mermaid
-graph TD
-    Client[React Frontend - Port 5173] <-->|HTTP API Requests / /api Proxy| Server[Node.js / Express Server - Port 5000]
-    Client <-->|Socket.IO Connection| Server
-    Server -->|Prisma Client ORM| DB[(PostgreSQL Database)]
-    
-    Visitor[Visitor / Shortened Link Clicker] -->|GET /:shortCode| Server
-    Server -->|1. Increment Click Count| DB
-    Server -->|2. Create Analytics Record| DB
-    Server -->|3. Broadcast 'url-click' Event| Client
-    Server -->|4. HTTP 302 Redirect| ExternalSite[Original Long URL]
+graph TB
+    subgraph Client [Presentation Layer - Frontend SPA]
+        React[React.js Engine / SPA]
+        Context[AuthContext - Global State]
+        Router[React Router DOM]
+        Pages[UI Pages: Dashboard, Analytics, Workspaces, Favorites]
+        AxiosClient[Axios - HTTP Client]
+        SocketClient[Socket.IO Client]
+        
+        Pages --> Context
+        Pages --> Router
+        Pages --> AxiosClient
+        Pages --> SocketClient
+    end
+
+    subgraph API_Gateway [Application Server - Backend API]
+        Express[Express.js App]
+        Routes[API Routes: /api/auth, /api/urls, /api/workspaces, /api/activities]
+        RedirectRoute[Redirect Router: GET /:shortCode]
+        Middlewares[Middlewares: Auth, UserAgent, IP Parser, CORS]
+        Controllers[Controllers: auth, url, workspace, activity]
+        SocketServer[Socket.IO Server]
+        GeoIP[GeoIP Lite / IP Lookup]
+        
+        Express --> Routes
+        Express --> RedirectRoute
+        Routes --> Middlewares
+        RedirectRoute --> Middlewares
+        Middlewares --> Controllers
+        RedirectRoute --> Controllers
+        Controllers --> SocketServer
+        Controllers --> GeoIP
+    end
+
+    subgraph Data [Data Layer]
+        Prisma[Prisma Client ORM]
+        Postgres[(PostgreSQL Database)]
+        
+        Controllers --> Prisma
+        Prisma --> Postgres
+    end
+
+    AxiosClient <-->|REST API Calls| Routes
+    SocketClient <-->|WebSocket Real-time Logs| SocketServer
 ```
 
 ---
