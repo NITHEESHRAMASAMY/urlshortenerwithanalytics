@@ -16,6 +16,11 @@ NexLink is a next-generation URL shortening and link intelligence platform. Buil
 
 Below is the component architecture of NexLink, showcasing the separation of concerns across the Presentation Layer (Frontend), Application Server (Backend API & Sockets), and Data Layer:
 
+![Component Architecture Diagram](architecture_diagram.png)
+
+<details>
+<summary><b>View Mermaid Source Diagram Code</b></summary>
+
 ```mermaid
 graph TB
     subgraph Client [Presentation Layer - Frontend SPA]
@@ -62,6 +67,7 @@ graph TB
     AxiosClient <-->|REST API Calls| Routes
     SocketClient <-->|WebSocket Real-time Logs| SocketServer
 ```
+</details>
 
 ---
 
